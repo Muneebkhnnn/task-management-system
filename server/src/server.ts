@@ -1,11 +1,13 @@
-process.loadEnvFile();
 import express from "express";
 import authRoutes from "./routes/auth.route.js";
 import taskRoutes from "./routes/task.route.js";
 import { errorHandler } from "./middleware/error.middleware.js";
 import cookieParser from "cookie-parser";
 import cors from "cors";
+import { existsSync } from "node:fs";
+import { loadEnvFile } from "node:process";
 
+if (existsSync(".env")) loadEnvFile(".env");
 const app = express();
 
 app.use(express.json());
