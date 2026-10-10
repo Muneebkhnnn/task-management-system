@@ -7,7 +7,7 @@
   "scripts": {
     "dev": "tsx watch --clear-screen=false src/server.ts",
     "typecheck": "tsc --noEmit",
-    "build": "tsc && prisma generate",
+    "build": "prisma generate & tsc",
     "start": "node dist/server.js"
   },
   "keywords": [],
