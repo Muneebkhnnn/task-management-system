@@ -7,11 +7,12 @@ import {
   refreshAccessToken,
   logoutUser,
 } from "../services/auth.service.js";
+import { ApiError } from "../lib/ApiError.js";
 
 export const register = asyncHandler(
   async (
     req: Request<{}, {}, RegisterInput>, // this tells ts that the request body will be of type RegisterInput
-    res: Response
+    res: Response,
   ) => {
     const user = await registerUser(req.body);
 
@@ -20,14 +21,11 @@ export const register = asyncHandler(
       message: "User registered successfully",
       user,
     });
-  }
+  },
 );
 
 export const login = asyncHandler(
-  async (
-    req: Request<{}, {}, LoginInput>,
-    res: Response
-  ) => {
+  async (req: Request<{}, {}, LoginInput>, res: Response) => {
     const result = await loginUser(req.body);
 
     res.cookie("refreshToken", result.refreshToken, {
@@ -43,41 +41,35 @@ export const login = asyncHandler(
       user: result.user,
       accessToken: result.accessToken,
     });
-  }
+  },
 );
 
-export const refresh = asyncHandler(
-  async (req: Request, res: Response) => {
-    const refreshToken = req.cookies.refreshToken;
+export const refresh = asyncHandler(async (req: Request, res: Response) => {
+  const refreshToken = req.cookies.refreshToken;
 
-    const result = await refreshAccessToken(refreshToken);
+  const result = await refreshAccessToken(refreshToken);
 
-    return res.status(200).json({
-      success: true,
-      accessToken: result.accessToken,
-    });
-  }
-);
+  return res.status(200).json({
+    success: true,
+    accessToken: result.accessToken,
+    user: result.user,
+  });
+});
 
-export const logout = asyncHandler(
-  async (req: Request, res: Response) => {
-    const refreshToken = req.cookies.refreshToken;
+export const logout = asyncHandler(async (req: Request, res: Response) => {
+  const refreshToken = req.cookies.refreshToken;
 
-    await logoutUser(refreshToken);
+  await logoutUser(refreshToken);
 
-    res.clearCookie("refreshToken");
+  res.clearCookie("refreshToken");
 
-    return res.status(200).json({
-      success: true,
-      message: "Logged out successfully",
-    });
-  }
-);
+  return res.status(200).json({
+    success: true,
+    message: "Logged out successfully",
+  });
+});
 
-export const getMe = (
-  req: Request,
-  res: Response
-) => {
+export const getMe = (req: Request, res: Response) => {
   return res.json({
     success: true,
     userId: req.user?.userId,

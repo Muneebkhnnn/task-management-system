@@ -25,6 +25,6 @@ router.post("/refresh", refresh);
 
 router.post("/logout", logout);
 
-router.get("/me", verifyJWT, getMe);
+// router.get("/me", verifyJWT, getMe);
 
 export default router;

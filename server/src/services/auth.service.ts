@@ -43,10 +43,7 @@ export const loginUser = async (data: LoginInput) => {
 
   const user = await prisma.user.findFirst({
     where: {
-      OR: [
-        { email: identifier },
-        { username: identifier },
-      ],
+      OR: [{ email: identifier }, { username: identifier }],
     },
   });
 
@@ -54,10 +51,7 @@ export const loginUser = async (data: LoginInput) => {
     throw new ApiError(401, "Invalid credentials");
   }
 
-  const isPasswordValid = await bcrypt.compare(
-    password,
-    user.passwordHash
-  );
+  const isPasswordValid = await bcrypt.compare(password, user.passwordHash);
 
   if (!isPasswordValid) {
     throw new ApiError(401, "Invalid credentials");
@@ -76,9 +70,7 @@ export const loginUser = async (data: LoginInput) => {
     data: {
       tokenHash: refreshTokenHash,
       userId: user.id,
-      expiresAt: new Date(
-        Date.now() + 7 * 24 * 60 * 60 * 1000
-      ),
+      expiresAt: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000),
     },
   });
 
@@ -93,9 +85,7 @@ export const loginUser = async (data: LoginInput) => {
   };
 };
 
-export const refreshAccessToken = async (
-  refreshToken: string | undefined
-) => {
+export const refreshAccessToken = async (refreshToken: string | undefined) => {
   if (!refreshToken) {
     throw new ApiError(401, "Refresh token required");
   }
@@ -103,10 +93,9 @@ export const refreshAccessToken = async (
   let payload: { userId: string };
 
   try {
-    payload = jwt.verify(
-      refreshToken,
-      process.env.JWT_REFRESH_SECRET!
-    ) as { userId: string };
+    payload = jwt.verify(refreshToken, process.env.JWT_REFRESH_SECRET!) as {
+      userId: string;
+    };
   } catch {
     throw new ApiError(401, "Invalid or expired refresh token");
   }
@@ -136,18 +125,33 @@ export const refreshAccessToken = async (
     throw new ApiError(401, "Refresh token expired");
   }
 
-  const accessToken = generateAccessToken(payload.userId);
+  const user = await prisma.user.findUnique({
+    where: {
+      id: payload.userId,
+    },
+    select: {
+      id: true,
+      username: true,
+      email: true,
+    },
+  });
+
+  if (!user) {
+    throw new ApiError(401, "User not found");
+  }
+
+  const accessToken = generateAccessToken(user.id);
 
   return {
     accessToken,
+    user,
   };
+
 };
 
-export const logoutUser = async (
-  refreshToken: string | undefined
-) => {
+export const logoutUser = async (refreshToken: string | undefined) => {
   if (!refreshToken) {
-    return;
+    throw new ApiError(400, "Refresh token not found");
   }
 
   const refreshTokenHash = crypto
@@ -155,7 +159,7 @@ export const logoutUser = async (
     .update(refreshToken)
     .digest("hex");
 
-  await prisma.refreshToken.deleteMany({ 
+  await prisma.refreshToken.deleteMany({
     where: {
       tokenHash: refreshTokenHash,
     },
