@@ -41,6 +41,8 @@ export const registerUser = async (data: RegisterInput) => {
 export const loginUser = async (data: LoginInput) => {
   const { identifier, password } = data;
 
+  console.log("Login started for identifier:", identifier);
+  
   const user = await prisma.user.findFirst({
     where: {
       OR: [{ email: identifier }, { username: identifier }],
@@ -66,13 +68,15 @@ export const loginUser = async (data: LoginInput) => {
     .update(refreshToken)
     .digest("hex");
 
-  await prisma.refreshToken.create({
+  const rdata=await prisma.refreshToken.create({
     data: {
       tokenHash: refreshTokenHash,
       userId: user.id,
       expiresAt: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000),
     },
   });
+
+  console.log('data frm refresh table',rdata);
 
   return {
     user: {
@@ -146,7 +150,6 @@ export const refreshAccessToken = async (refreshToken: string | undefined) => {
     accessToken,
     user,
   };
-
 };
 
 export const logoutUser = async (refreshToken: string | undefined) => {

@@ -5,8 +5,10 @@
   "main": "index.js",
   "type": "module",
   "scripts": {
-   "dev": "tsx watch --clear-screen=false src/server.ts",
-    "typecheck": "tsc --noEmit"
+    "dev": "tsx watch --clear-screen=false src/server.ts",
+    "typecheck": "tsc --noEmit",
+    "build": "tsc && prisma generate",
+    "start": "node dist/server.js"
   },
   "keywords": [],
   "author": "",
